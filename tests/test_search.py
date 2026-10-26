@@ -16,13 +16,13 @@ def mock_customers():
 def test_search_exact_and_partial_order(mock_load, mock_customers):
     # TS-03 y TS-04 ordenamiento
     mock_load.return_value = mock_customers
-    
+
     results = search_customers("ale")
-    
+
     assert len(results) == 4
     # Coincidencia exacta "ale" en nombre (id=2) va primero
     assert results[0].id == 2
-    
+
     # Las parciales se ordenan por apellido: Alejandro (4), Gomez (3), Zavala (1)
     assert results[1].id == 4
     assert results[2].id == 3
@@ -32,10 +32,10 @@ def test_search_exact_and_partial_order(mock_load, mock_customers):
 def test_search_case_insensitive(mock_load, mock_customers):
     # TS-03: Término minúsculas (o viceversa) devuelve cliente de forma insensible
     mock_load.return_value = mock_customers
-    
+
     # Aunque la búsqueda es en mayúsculas, debe encontrar a "Ale" y a los demás
     results = search_customers("ALE")
-    
+
     assert len(results) == 4
     assert results[0].id == 2
 
@@ -51,6 +51,6 @@ def test_search_unallowed_fields(mock_load, mock_customers):
 def test_search_no_results(mock_load, mock_customers):
     # Parte de TS-06: Sin coincidencia
     mock_load.return_value = mock_customers
-    
+
     results = search_customers("invento")
     assert len(results) == 0

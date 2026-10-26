@@ -1,33 +1,37 @@
-# Customer Search CLI
+# Customer Search CLI (`ada-08-agent-ready-repository`)
 
-Aplicación de línea de comandos (CLI) desarrollada en Python para buscar clientes de forma rápida en una base de datos local JSON.
+Command-line application in Python 3.11+ for searching customer records in a local JSON database (`data/customers.json`), designed with **Spec-Driven Development (SDD)** and **Agent-Ready Repository** guardrails.
 
-## Requisitos
+## Quick Navigation for Humans & Coding Agents
+- **Operational Contract**: [`AGENTS.md`](AGENTS.md)
+- **Repository Map & Change Guide**: [`docs/REPO_MAP.md`](docs/REPO_MAP.md)
+- **Normative Sources of Truth**: [`REQUIREMENTS.md`](REQUIREMENTS.md) · [`SPEC.md`](SPEC.md) · [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`TASKS.md`](TASKS.md) · [`docs/traceability.md`](docs/traceability.md)
+- **Controlled Task Under Test**: [`TASK_UNDER_TEST.md`](TASK_UNDER_TEST.md)
+
+## Requirements & Setup
 - Python 3.11+
-- `pytest` y `pytest-cov` (para las pruebas y medición de cobertura)
+- Install test dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
 
-## Instrucciones de Ejecución
-
-Para realizar una búsqueda desde la raíz del proyecto, cuentas con dos opciones pasando el término a buscar entre comillas:
-
-**Opción 1: Usar el script rápido**
-Si utilizas la terminal de Windows (CMD), puedes escribir directamente:
+## Running the CLI
+```bash
+python src/cli.py "ale"
+```
+Or on Windows CMD:
 ```cmd
 search "ale"
 ```
 
-**Opción 2: Ejecución estándar con Python**
+## Unified Verification Contract (Tests + Lint/Compile + Guardrails)
+Run the single verification contract shared by human developers, coding agents, and CI:
 ```bash
-python src/cli.py "ale"
-```
+# Unix / CI / Git Bash on Windows:
+./scripts/verify_repo.sh
+# Or explicitly with Git Bash on Windows PowerShell:
+D:\Git\bin\bash.exe scripts/verify_repo.sh
 
-El sistema admite búsquedas por fragmentos de nombre, apellido o correo electrónico, y las ordenará automáticamente dándole prioridad a las coincidencias exactas.
-## Pruebas Automatizadas
-
-El proyecto cuenta con una batería de pruebas diseñada con enfoque SDD (Spec-Driven Development) para garantizar el 100% de cumplimiento de los Escenarios de Prueba.
-
-Para ejecutar todas las pruebas y mostrar la cobertura de código, ejecuta:
-
-```bash
-pytest --cov=src tests/
+# Windows PowerShell equivalent wrapper:
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify_repo.ps1
 ```

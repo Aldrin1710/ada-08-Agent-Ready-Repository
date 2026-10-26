@@ -1,37 +1,37 @@
 # Tasks
 
-## T-01 Configuración del proyecto
-- Goal: Crear la estructura básica de directorios del proyecto y configurar el framework de pruebas.
-- Files: `src/`, `tests/`, `docs/`
-- Acceptance: El entorno está listo y pytest puede ejecutarse sin mostrar errores estructurales.
-- Verification: `pytest -v`
+## T-01 Project Setup
+- **Goal**: Establish base directory structure (`src/`, `tests/`, `docs/`) and configure `pytest`.
+- **Files**: `pytest.ini`, `tests/test_environment.py`
+- **Acceptance**: `pytest` runs cleanly from the repository root.
+- **Verification**: `pytest -v`
 
-## T-02 Modelo de dominio
-- Goal: Implementar el modelo de dominio Customer y la lógica de almacenamiento (Storage) para leer desde JSON.
-- Files: `src/model.py`, `src/storage.py`, `data/customers.json`
-- Acceptance: El archivo JSON se parsea correctamente y se convierte en una lista de objetos nativos de Python.
-- Verification: Script simple en Python para imprimir los clientes cargados sin que el programa colapse.
+## T-02 Domain Model & Storage
+- **Goal**: Implement `Customer` domain model and `load_customers` JSON storage loader with structural and type validation (`NFR-02`, `EH-02`).
+- **Files**: `src/model.py`, `src/storage.py`, `data/customers.json`
+- **Acceptance**: Valid JSON parses into `list[Customer]`; missing/malformed files exit with code `1`.
+- **Verification**: `pytest tests/test_storage.py`
 
-## T-03 Lógica de búsqueda
-- Goal: Implementar CustomerService con el filtrado (insensible a mayúsculas, coincidencia parcial) y reglas de ordenamiento.
-- Files: `src/service.py`
-- Acceptance: Se cumplen los criterios AC-02, AC-03 y AC-04 exclusivamente a nivel lógica de servicio.
-- Verification: Invocar la función `search_customers()` manualmente en consola Python para verificar que retorna los subconjuntos correctos.
+## T-03 Search & Ordering Logic
+- **Goal**: Implement `search_customers(term: str) -> list[Customer]` with case-insensitive matching (`FR-02`, `FR-03`, `FR-04`) and exact-before-partial deterministic ordering (`FR-05`, `AC-03`, `AC-04`).
+- **Files**: `src/service.py`, `tests/test_search.py`
+- **Acceptance**: `AC-02`, `AC-03`, and `AC-04` are verified by unit tests in `tests/test_search.py`.
+- **Verification**: `pytest tests/test_search.py`
 
-## T-04 Validación y errores
-- Goal: Implementar la CLI, las validaciones de entrada (VR-01, VR-02) y el manejo de errores (EH-01, EH-02).
-- Files: `src/cli.py`
-- Acceptance: Se cumplen los criterios AC-01, AC-05, AC-06 y AC-07. La CLI intercepta errores y no expone el código interno (stacktrace) al usuario.
-- Verification: Ejecutar comandos manuales en la terminal, ej., `python src/cli.py ""`, `python src/cli.py "al"`.
+## T-04 CLI Validation & Error Handling
+- **Goal**: Implement CLI entry point, input validations (`VR-01`, `VR-02`), and standardized error messages (`EH-01`, `EH-02`).
+- **Files**: `src/cli.py`, `tests/test_cli.py`
+- **Acceptance**: `AC-01` and `AC-05` pass without exposing stack traces.
+- **Verification**: `pytest tests/test_cli.py`
 
-## T-05 Pruebas automatizadas
-- Goal: Implementar pruebas automatizadas para todos los Escenarios de Prueba definidos en SPEC.md.
-- Files: `tests/test_search.py`, `tests/test_cli.py`
-- Acceptance: La cobertura de código  alcanza al menos el 90%, y las pruebas del TS-01 al TS-07 son exitosas.
-- Verification: `pytest -v`
+## T-05 Automated Tests & Quality Gate
+- **Goal**: Maintain >= 90% test coverage on `src/` (`NFR-03`) and pass all test scenarios (`TS-01` through `TS-07`).
+- **Files**: `tests/test_search.py`, `tests/test_cli.py`, `tests/test_storage.py`
+- **Acceptance**: Coverage on `src/` >= 90% and all tests pass.
+- **Verification**: `pytest --cov=src --cov-fail-under=90 tests/`
 
-## T-06 Documentación
-- Goal: Actualizar la matriz de trazabilidad y las instrucciones de ejecución.
-- Files: `docs/traceability.md`, `README.md`
-- Acceptance: La trazabilidad conecta claramente Requisito -> AC -> Tarea -> Código -> Prueba. Se cumple la definición de "Hecho" (DoD).
-- Verification: Revisión humana de los archivos Markdown generados.
+## T-06 Traceability & Repository Verification
+- **Goal**: Keep `docs/traceability.md` synchronized with all requirements, acceptance criteria, source files, and unit test functions, and pass repository contract checks.
+- **Files**: `docs/traceability.md`, `scripts/check_repo_contract.py`, `scripts/verify_repo.sh`
+- **Acceptance**: Every test in `tests/test_search.py` is mapped in `docs/traceability.md` and `scripts/check_repo_contract.py` reports `REPO_CONTRACT: PASS`.
+- **Verification**: `python scripts/check_repo_contract.py`
