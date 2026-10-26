@@ -54,3 +54,35 @@ def test_search_no_results(mock_load, mock_customers):
 
     results = search_customers("invento")
     assert len(results) == 0
+
+@patch('src.service.load_customers')
+def test_search_exact_match_last_name(mock_load):
+    # CR-02: Coincidencia exacta en last_name (insensible a mayúsculas/minúsculas) se prioriza antes que parciales
+    mock_load.return_value = [
+        Customer(id=1, name="Carlos", last_name="Perezosa", email="carlos@example.com"),
+        Customer(id=2, name="Lucia", last_name="Perez", email="lucia@example.com"),
+        Customer(id=3, name="Perezoso", last_name="Alvarez", email="perezoso@example.com"),
+    ]
+
+    results = search_customers("pErEz")
+
+    assert [c.id for c in results] == [2, 3, 1]
+
+@patch('src.service.load_customers')
+def test_search_deterministic_tie_breaking_by_id(mock_load):
+    # CR-02: Desempate determinista por id ascendente en coincidencias exactas y en parciales con mismo apellido
+    mock_load.return_value = [
+        Customer(id=10, name="Alex", last_name="Gomez", email="alex10@example.com"),
+        Customer(id=4, name="Bruno", last_name="Alex", email="bruno4@example.com"),
+        Customer(id=7, name="Alex", last_name="Zavala", email="alex7@example.com"),
+        Customer(id=9, name="Alexia", last_name="Lopez", email="alexia9@example.com"),
+        Customer(id=3, name="Alexander", last_name="Lopez", email="alexander3@example.com"),
+        Customer(id=6, name="Alexis", last_name="Alpha", email="alexis6@example.com"),
+    ]
+
+    results = search_customers("alex")
+
+    # Exactas ordenadas por id ascendente: 4, 7, 10
+    # Parciales ordenadas por apellido (Alpha -> 6, Lopez -> 3 luego 9)
+    assert [c.id for c in results] == [4, 7, 10, 6, 3, 9]
+

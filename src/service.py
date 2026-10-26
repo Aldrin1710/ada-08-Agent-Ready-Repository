@@ -16,8 +16,12 @@ def search_customers(term: str) -> list[Customer]:
         last_name_lower = customer.last_name.lower()
         email_lower = customer.email.lower()
 
-        # Coincidencia exacta por nombre o correo
-        is_exact = (term_lower == name_lower or term_lower == email_lower)
+        # Coincidencia exacta por nombre, apellido o correo
+        is_exact = (
+            term_lower == name_lower
+            or term_lower == last_name_lower
+            or term_lower == email_lower
+        )
 
         if is_exact:
             exact_matches.append(customer)
@@ -29,8 +33,11 @@ def search_customers(term: str) -> list[Customer]:
             term_lower in email_lower):
             partial_matches.append(customer)
 
-    # Ordenar coincidencias parciales alfabéticamente por apellido
-    partial_matches.sort(key=lambda c: c.last_name.lower())
+    # Ordenar coincidencias exactas por id ascendente
+    exact_matches.sort(key=lambda c: c.id)
+
+    # Ordenar coincidencias parciales alfabéticamente por apellido y desempatar por id ascendente
+    partial_matches.sort(key=lambda c: (c.last_name.lower(), c.id))
 
     # Retornar primero exactas, luego parciales
     return exact_matches + partial_matches
