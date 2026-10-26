@@ -1,72 +1,72 @@
 # Reporte de Mejora de Preparación del Repositorio (`ADA-08`)
 
 ## 1. Resumen Ejecutivo
-Este reporte documenta la evaluación empírica y la transformación del repositorio **Customer Search CLI** (`ada-05` / `ada-07`) en un **Agent-Ready Repository** (`ada-08-agent-ready-repository`).
-- **Commit/tag de baseline**: `ada08-baseline` (`a0f667c`)
+Este reporte documenta la evaluación empírica y la transformación del repositorio **Customer Search CLI** (`ada-05` / `ada-07`) en un **Repositorio Preparado para Agentes (`Agent-Ready Repository`)** (`ada-08-agent-ready-repository`).
+- **Commit/tag de línea base**: `ada08-baseline` (`a0f667c`)
 - **Tarea bajo prueba (`TASK_UNDER_TEST.md`)**: `CR-02` — Extender la detección de coincidencia exacta en `search_customers` (`src/service.py`) para incluir `last_name` (insensible a mayúsculas/minúsculas) junto con `name` y `email`, con desempate determinista por `id` ascendente tanto en coincidencias exactas como parciales, más pruebas unitarias en `tests/test_search.py`.
-- **Mejora en el Score de Readiness**: **BEFORE: `39.0 / 100`** $\rightarrow$ **AFTER: `98.0 / 100`** (**Delta: `+59.0 puntos`**)
+- **Mejora en el Puntaje de Preparación**: **BEFORE: `39.0 / 100`** $\rightarrow$ **AFTER: `98.0 / 100`** (**Delta: `+59.0 puntos`**)
 - **Mejora en el Resultado del Agente**: **BEFORE: `PARTIAL`** (39 pasos, 15 archivos leídos, 1 llamada fallida a `edit_file`, 3 archivos binarios fuera de alcance ensuciados, `docs/traceability.md` omitido) $\rightarrow$ **AFTER: `PASS`** (31 pasos, lecturas dirigidas vía `REPO_MAP.md`, 0 comandos/ediciones fallidas, 0 archivos fuera de alcance modificados, `docs/traceability.md` actualizado, `REPO_CONTRACT: PASS` y `VERIFY_REPO: PASS`).
 
 ---
 
-## 2. Changes Made (Clasificación de Mejoras — Sección 10.1)
+## 2. Cambios Realizados (`Changes Made` — Clasificación de Mejoras Sección 10.1)
 
-### Improvement I-01
-- **Category**: `Context`
-- **Problem**: `AGENTS.md` tenía solo 21 líneas, apuntaba a un archivo `REQUIREMENTS.md` inexistente (el archivo real se llamaba `REQUERIMENTS.md`), carecía de comandos estándar, no incluía un mapa del repositorio y tenía *stop conditions* y *Definition of Done* incompletos.
-- **Change**: Se reescribió `AGENTS.md` como un contrato operativo conciso (`Read First`, `Sources of Truth`, `Repository Map`, `Standard Commands`, `Change Rules`, `Stop Conditions`, `Definition of Done`), se renombró `REQUERIMENTS.md` $\rightarrow$ `REQUIREMENTS.md` y se estandarizaron en inglés `REQUIREMENTS.md`, `SPEC.md`, `ARCHITECTURE.md`, `TASKS.md` y `docs/traceability.md`.
-- **Evidence**: En la ejecución AFTER, el agente leyó primero `AGENTS.md`, encontró `REQUIREMENTS.md` de inmediato sin errores y cumplió íntegramente las `Change Rules` y el `Definition of Done`.
+### Mejora I-01 (`Improvement I-01`)
+- **Categoría (`Category`)**: `Context`
+- **Problema (`Problem`)**: `AGENTS.md` tenía solo 21 líneas, apuntaba a un archivo `REQUIREMENTS.md` inexistente (el archivo real se llamaba `REQUERIMENTS.md`), carecía de comandos estándar, no incluía un mapa del repositorio y tenía condiciones de paro y *Definition of Done* incompletos.
+- **Cambio (`Change`)**: Se reescribió `AGENTS.md` como un contrato operativo conciso (`Read First`, `Sources of Truth`, `Repository Map`, `Standard Commands`, `Change Rules`, `Stop Conditions`, `Definition of Done`), se renombró `REQUERIMENTS.md` $\rightarrow$ `REQUIREMENTS.md` y se estandarizaron en inglés `REQUIREMENTS.md`, `SPEC.md`, `ARCHITECTURE.md`, `TASKS.md` y `docs/traceability.md`.
+- **Evidencia (`Evidence`)**: En la ejecución AFTER, el agente leyó primero `AGENTS.md`, encontró `REQUIREMENTS.md` de inmediato sin errores y cumplió íntegramente las reglas de cambio y el *Definition of Done*.
 
-### Improvement I-02
-- **Category**: `Context` (Adaptador Tool-Specific y `Human Gate`)
-- **Problem**: Los archivos específicos de herramienta (`GEMINI.md` y `.agents/skills/reviewing_pull_requests/SKILL.md`) o no existían o referenciaban el nombre mal escrito `REQUERIMENTS.md`.
-- **Change**: Se creó `GEMINI.md` como adaptador ligero que apunta a `AGENTS.md` sin duplicar requisitos, y se actualizó `.agents/skills/reviewing_pull_requests/SKILL.md` (`v1.0.2`, `Human Gate` que impone revisiones en borrador de solo lectura y prohíbe `gh pr merge`).
-- **Evidence**: `GEMINI.md` dirigió al agente en AFTER hacia `AGENTS.md`, `docs/REPO_MAP.md` y `scripts/verify_repo.ps1` sin duplicar requisitos del proyecto.
+### Mejora I-02 (`Improvement I-02`)
+- **Categoría (`Category`)**: `Context` / `Human Gate`
+- **Problema (`Problem`)**: Los archivos específicos de herramienta (`GEMINI.md` y `.agents/skills/reviewing_pull_requests/SKILL.md`) o no existían o referenciaban el nombre mal escrito `REQUERIMENTS.md`.
+- **Cambio (`Change`)**: Se creó `GEMINI.md` como adaptador ligero que apunta a `AGENTS.md` sin duplicar requisitos, y se actualizó `.agents/skills/reviewing_pull_requests/SKILL.md` (`v1.0.2`, `Human Gate` que impone revisiones en borrador de solo lectura y prohíbe `gh pr merge`).
+- **Evidencia (`Evidence`)**: `GEMINI.md` dirigió al agente en AFTER hacia `AGENTS.md`, `docs/REPO_MAP.md` y `scripts/verify_repo.ps1` sin duplicar requisitos del proyecto.
 
-### Improvement I-03
-- **Category**: `Navigation`
-- **Problem**: No existía `docs/REPO_MAP.md` y `ARCHITECTURE.md` referenciaba un comando inexistente (`python search.py "termino"`). Durante BEFORE, el agente tuvo que ejecutar escaneos recursivos de directorios (`Get-ChildItem -Recurse`) y leer los 4 archivos de `src/*`, todos los de `tests/*` y `data/customers.json` (15 archivos en total).
-- **Change**: Se creó `docs/REPO_MAP.md` con `Entry Points`, `Tests`, una guía paso a paso (`Change Guide`) y reglas `Do Not Edit Directly`, además de corregir `ARCHITECTURE.md`.
-- **Evidence**: Durante AFTER, el agente leyó `docs/REPO_MAP.md` y fue directamente a `src/service.py`, `tests/test_search.py` y `docs/traceability.md`, omitiendo por completo los archivos irrelevantes (`src/cli.py`, `src/storage.py`, `src/model.py`, `tests/test_cli.py`, `tests/test_storage.py`, `data/customers.json`).
+### Mejora I-03 (`Improvement I-03`)
+- **Categoría (`Category`)**: `Navigation`
+- **Problema (`Problem`)**: No existía `docs/REPO_MAP.md` y `ARCHITECTURE.md` referenciaba un comando inexistente (`python search.py "termino"`). Durante BEFORE, el agente tuvo que ejecutar escaneos recursivos de directorios (`Get-ChildItem -Recurse`) y leer los 4 archivos de `src/*`, todos los de `tests/*` y `data/customers.json` (15 archivos en total).
+- **Cambio (`Change`)**: Se creó `docs/REPO_MAP.md` con puntos de entrada (`Entry Points`), pruebas (`Tests`), una guía paso a paso (`Change Guide`) y reglas de archivos protegidos (`Do Not Edit Directly`), además de corregir `ARCHITECTURE.md`.
+- **Evidencia (`Evidence`)**: Durante AFTER, el agente leyó `docs/REPO_MAP.md` y fue directamente a `src/service.py`, `tests/test_search.py` y `docs/traceability.md`, omitiendo por completo los archivos irrelevantes (`src/cli.py`, `src/storage.py`, `src/model.py`, `tests/test_cli.py`, `tests/test_storage.py`, `data/customers.json`).
 
-### Improvement I-04
-- **Category**: `Executable Knowledge`
-- **Problem**: La cobertura de pruebas ($\ge 90\%$ exigida por `NFR-03`), los chequeos estáticos de compilación/tipos y la validación del contrato del repositorio no estaban integrados en un único comando reproducible.
-- **Change**: Se crearon `scripts/verify_repo.sh` (y su equivalente para Windows PowerShell `scripts/verify_repo.ps1`) junto con `requirements.txt` para ejecutar en secuencia: (1) `pytest -q --cov=src --cov-fail-under=90 tests/`, (2) `python -m compileall -q src tests scripts` y (3) `python scripts/check_repo_contract.py`.
-- **Evidence**: En AFTER, el agente ejecutó `scripts/verify_repo.ps1` en un solo paso y obtuvo la salida determinista `REPO_CONTRACT: PASS` y `VERIFY_REPO: PASS`.
+### Mejora I-04 (`Improvement I-04`)
+- **Categoría (`Category`)**: `Executable Knowledge`
+- **Problema (`Problem`)**: La cobertura de pruebas ($\ge 90\%$ exigida por `NFR-03`), los chequeos estáticos de compilación/tipos y la validación del contrato del repositorio no estaban integrados en un único comando reproducible.
+- **Cambio (`Change`)**: Se crearon `scripts/verify_repo.sh` (y su equivalente para Windows PowerShell `scripts/verify_repo.ps1`) junto con `requirements.txt` para ejecutar en secuencia: (1) `pytest -q --cov=src --cov-fail-under=90 tests/`, (2) `python -m compileall -q src tests scripts` y (3) `python scripts/check_repo_contract.py`.
+- **Evidencia (`Evidence`)**: En AFTER, el agente ejecutó `scripts/verify_repo.ps1` en un solo paso y obtuvo la salida determinista `REPO_CONTRACT: PASS` y `VERIFY_REPO: PASS`.
 
-### Improvement I-05
-- **Category**: `Guardrail`
-- **Problem**: En BEFORE, el agente olvidó actualizar `docs/traceability.md` al agregar 2 pruebas unitarias en `tests/test_search.py`, y ningún chequeo determinista protegía `data/customers.json`, verificaba las anotaciones de tipos de `NFR-03` ni bloqueaba archivos `.pyc`/`.coverage` rastreados.
-- **Change**: Se implementó `scripts/check_repo_contract.py` con 7 verificaciones deterministas: (1) existencia de archivos/carpetas esenciales, (2) secciones obligatorias en `AGENTS.md`, (3) referencias a `FR-01`..`FR-06` y `AC-01`..`AC-05` en `SPEC.md`, (4) registro en `docs/traceability.md` de toda función `def test_*` definida en `tests/test_search.py`, (5) cero archivos `.pyc`, `__pycache__`, `.coverage` o `.env` rastreados en Git, (6) cero modificaciones en `data/customers.json` (`git diff`), y (7) verificación vía AST de anotaciones de tipos en funciones públicas de `src/service.py` y `src/storage.py`.
-- **Evidence**: En AFTER, el agente inspeccionó `scripts/check_repo_contract.py`, actualizó proactivamente `docs/traceability.md` junto con `tests/test_search.py` y aprobó `REPO_CONTRACT: PASS` en la primera ejecución.
+### Mejora I-05 (`Improvement I-05`)
+- **Categoría (`Category`)**: `Guardrail`
+- **Problema (`Problem`)**: En BEFORE, el agente olvidó actualizar `docs/traceability.md` al agregar 2 pruebas unitarias en `tests/test_search.py`, y ningún chequeo determinista protegía `data/customers.json`, verificaba las anotaciones de tipos de `NFR-03` ni bloqueaba archivos `.pyc`/`.coverage` rastreados.
+- **Cambio (`Change`)**: Se implementó `scripts/check_repo_contract.py` con 7 verificaciones deterministas: (1) existencia de archivos/carpetas esenciales, (2) secciones obligatorias en `AGENTS.md`, (3) referencias a `FR-01`..`FR-06` y `AC-01`..`AC-05` en `SPEC.md`, (4) registro en `docs/traceability.md` de toda función `def test_*` definida en `tests/test_search.py`, (5) cero archivos `.pyc`, `__pycache__`, `.coverage` o `.env` rastreados en Git, (6) cero modificaciones en `data/customers.json` (`git diff`), y (7) verificación vía AST de anotaciones de tipos en funciones públicas de `src/service.py` y `src/storage.py`.
+- **Evidencia (`Evidence`)**: En AFTER, el agente inspeccionó `scripts/check_repo_contract.py`, actualizó proactivamente `docs/traceability.md` junto con `tests/test_search.py` y aprobó `REPO_CONTRACT: PASS` en la primera ejecución.
 
-### Improvement I-06
-- **Category**: `Guardrail` (Higiene de Git y Normalización de Saltos de Línea)
-- **Problem**: `.coverage` y `src/__pycache__/*.pyc` / `tests/__pycache__/*.pyc` estaban rastreados en Git, provocando que 3 archivos binarios fuera de alcance se ensuciaran durante BEFORE (`pytest --cov=src`). Además, los saltos CRLF y espacios al final de línea en `src/service.py` hicieron fallar a `edit_file` durante BEFORE.
-- **Change**: Se eliminaron `__pycache__/` y `.coverage` del índice de Git (`git rm --cached`), se agregaron `.gitignore` y `.gitattributes` (`* text=auto eol=lf`), y se normalizaron los saltos de línea LF en `src/` y `tests/`.
-- **Evidence**: En AFTER hubo `0` fallos de `edit_file` (frente a 1 fallo en BEFORE) y `0` archivos binarios fuera de alcance en `git status -s` (frente a 3 en BEFORE).
+### Mejora I-06 (`Improvement I-06`)
+- **Categoría (`Category`)**: `Guardrail`
+- **Problema (`Problem`)**: `.coverage` y `src/__pycache__/*.pyc` / `tests/__pycache__/*.pyc` estaban rastreados en Git, provocando que 3 archivos binarios fuera de alcance se ensuciaran durante BEFORE (`pytest --cov=src`). Además, los saltos CRLF y espacios al final de línea en `src/service.py` hicieron fallar a `edit_file` durante BEFORE.
+- **Cambio (`Change`)**: Se eliminaron `__pycache__/` y `.coverage` del índice de Git (`git rm --cached`), se agregaron `.gitignore` y `.gitattributes` (`* text=auto eol=lf`), y se normalizaron los saltos de línea LF en `src/` y `tests/`.
+- **Evidencia (`Evidence`)**: En AFTER hubo `0` fallos de `edit_file` (frente a 1 fallo en BEFORE) y `0` archivos binarios fuera de alcance en `git status -s` (frente a 3 en BEFORE).
 
-### Improvement I-07
-- **Category**: `CI Check`
-- **Problem**: No existía un pipeline de CI que ejecutara el mismo contrato de verificación fuera de la sesión local del agente.
-- **Change**: Se creó `.github/workflows/verify.yml` activado en `push` y `pull_request`, que instala `requirements.txt` y ejecuta `bash ./scripts/verify_repo.sh`.
-- **Evidence**: Desarrolladores humanos, el coding agent y GitHub Actions CI comparten ahora exactamente el mismo script único de verificación (`scripts/verify_repo.sh`).
+### Mejora I-07 (`Improvement I-07`)
+- **Categoría (`Category`)**: `CI Check`
+- **Problema (`Problem`)**: No existía un pipeline de CI que ejecutara el mismo contrato de verificación fuera de la sesión local del agente.
+- **Cambio (`Change`)**: Se creó `.github/workflows/verify.yml` activado en `push` y `pull_request`, que instala `requirements.txt` y ejecuta `bash ./scripts/verify_repo.sh`.
+- **Evidencia (`Evidence`)**: Desarrolladores humanos, el coding agent y GitHub Actions CI comparten ahora exactamente el mismo script único de verificación (`scripts/verify_repo.sh`).
 
 ---
 
-## 3. Tabla Comparativa de Impacto (BEFORE vs AFTER)
+## 3. Tabla Comparativa de Impacto (`BEFORE` vs `AFTER`)
 
 | Indicador | BEFORE (`before-experiment` / `945f6ce`) | AFTER (`main` / `c301142`) |
 |---|---|---|
-| **Clarification questions** | `0` (procedió pese a la falta de `REQUIREMENTS.md` y la ambigüedad en `SPEC.md`) | `0` (`REQUIREMENTS.md` y `SPEC.md` alineados y explícitos) |
-| **Failed / unknown commands** | `1` llamada fallida a `edit_file` en `src/service.py` (diferencia CRLF); sin comando único de verificación | `0` llamadas o comandos fallidos; ejecutó `scripts/verify_repo.ps1` directamente |
-| **Incorrect assumptions** | `3` (omitió actualizar `docs/traceability.md`, asumió saltos LF, omitió chequeos estáticos/de contrato) | `0` (actualizó `src/service.py`, `tests/test_search.py` y `docs/traceability.md` simultáneamente) |
-| **Out-of-scope files modified** | `3` archivos binarios ensuciados (`.coverage` y 2 archivos `.pyc` rastreados en Git) | `0` (`git status -s` limpio salvo por los 3 archivos objetivo) |
-| **Validations executed correctly** | Parcial (únicamente `pytest --cov=src`) | Completa (`scripts/verify_repo.ps1`: 21 pruebas + gate de cobertura 96.55% + `compileall` + `check_repo_contract.py`) |
+| **Preguntas de aclaración (`Clarification questions`)** | `0` (procedió pese a la falta de `REQUIREMENTS.md` y la ambigüedad en `SPEC.md`) | `0` (`REQUIREMENTS.md` y `SPEC.md` alineados y explícitos) |
+| **Comandos fallidos / desconocidos (`Failed / unknown commands`)** | `1` llamada fallida a `edit_file` en `src/service.py` (diferencia CRLF); sin comando único de verificación | `0` llamadas o comandos fallidos; ejecutó `scripts/verify_repo.ps1` directamente |
+| **Suposiciones incorrectas (`Incorrect assumptions`)** | `3` (omitió actualizar `docs/traceability.md`, asumió saltos LF, omitió chequeos estáticos/de contrato) | `0` (actualizó `src/service.py`, `tests/test_search.py` y `docs/traceability.md` simultáneamente) |
+| **Archivos fuera de alcance modificados (`Out-of-scope files modified`)** | `3` archivos binarios ensuciados (`.coverage` y 2 archivos `.pyc` rastreados en Git) | `0` (`git status -s` limpio salvo por los 3 archivos objetivo) |
+| **Validaciones ejecutadas correctamente (`Validations executed correctly`)** | Parcial (únicamente `pytest --cov=src`) | Completa (`scripts/verify_repo.ps1`: 21 pruebas + gate de cobertura 96.55% + `compileall` + `check_repo_contract.py`) |
 | **Pasos de trayectoria y exploración** | `39` pasos; `2` escaneos de directorios + `15` archivos leídos (incluyendo `cli.py`, `storage.py`, `customers.json`) | `31` pasos; `1` listado raíz + `13` lecturas dirigidas por `AGENTS.md` y `docs/REPO_MAP.md` |
-| **Final result** | **PARTIAL** | **PASS** |
-| **Readiness Audit Score** | **39.0 / 100** | **98.0 / 100** (**+59.0 pts**) |
+| **Resultado final (`Final result`)** | **PARTIAL** | **PASS** |
+| **Puntaje de Auditoría (`Readiness Audit Score`)** | **39.0 / 100** | **98.0 / 100** (**+59.0 pts**) |
 
 ---
 
