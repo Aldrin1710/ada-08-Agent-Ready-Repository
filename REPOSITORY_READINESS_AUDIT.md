@@ -1,0 +1,21 @@
+# Repository Readiness Audit
+
+## BEFORE
+
+| Dimension | Score 0-5 | Weighted | Evidence | Main Gap |
+|---|---:|---:|---|---|
+| Entry Point & Navigation | 2 | 6.0 / 15 | `README.md` shows `python src/cli.py "ale"`, but `ARCHITECTURE.md` references a non-existent `python search.py "termino"`. No `docs/REPO_MAP.md` exists; the BEFORE agent had to run 2 directory listings and read 15 files. | Missing `docs/REPO_MAP.md` and contradictory entry-point documentation (`src/cli.py` vs `search.py`). |
+| Agent Instructions | 2 | 6.0 / 15 | `AGENTS.md` has 21 lines with basic rules and DoD, but points to `REQUIREMENTS.md` (actual file is misspelled `REQUERIMENTS.md`), lacks a repository map, lacks exact verification commands, and lacks concrete stop conditions. | Broken reference to `REQUIREMENTS.md`, no repository map, no standard command block, and incomplete stop conditions. |
+| Build / Run / Test | 2 | 6.0 / 15 | `pytest.ini` exists and `README.md` mentions `pytest --cov=src tests/`, but `AGENTS.md` only says `Run pytest`. There is no `requirements.txt`, no linter/type-check command (`NFR-03`), and no single verification script (`scripts/verify_repo.sh`). | No single reproducible verification command (`verify_repo.sh`), no `requirements.txt`, and undocumented `NFR-03` quality checks. |
+| Architecture Boundaries | 2 | 4.0 / 10 | `ARCHITECTURE.md` defines 3 layers (`CLI`, `CustomerService`, `Storage`), but contradicts the code (`src/cli.py` performs input validation `VR-01`/`VR-02`, and `src/storage.py` prints to stdout and calls `sys.exit(1)`). | Documented layer boundaries do not match actual code responsibilities, and protected paths (`data/customers.json`) are undocumented. |
+| Requirements & Traceability | 2 | 4.0 / 10 | IDs (`FR-*`, `AC-*`, `T-*`) connect `REQUERIMENTS.md`, `SPEC.md`, `TASKS.md`, and `docs/traceability.md`, but the requirements filename is misspelled (`REQUERIMENTS.md`), artifacts mix Spanish/English, and `SPEC.md` (`sea por nombre o correo`) partially conflicts with `FR-02`/`FR-05`. | Misspelled `REQUERIMENTS.md`, mixed-language technical artifacts, and minor spec/requirement inconsistency on `last_name` exact matching. |
+| Automation & Guardrails | 1 | 2.0 / 10 | No `.gitignore`, no `scripts/check_repo_contract.py`, no git hooks, and no `.github/workflows/verify.yml`. Running `pytest --cov=src` in BEFORE modified 3 tracked binary files (`.coverage` and 2 `.pyc` files). | Zero repository-level guardrails or CI checks; tracked binary cache files (`__pycache__/*.pyc`, `.coverage`) pollute the working tree. |
+| Testability & Evidence | 3 | 9.0 / 15 | 19 unit tests across 4 test files achieve 97% coverage on `src/`, providing a solid unit test baseline, but there is no automated DoD check verifying contract compliance or traceability updates. | Good unit test coverage, but no unified verification script that produces deterministic pass/fail contract evidence. |
+| Safety & Permissions | 1 | 2.0 / 10 | Only the PR-review skill has read-only instructions; repository-wide `AGENTS.md` defines no protected paths (`data/customers.json`, `.env`, generated files) and no automated check blocks edits to sensitive/seed files. | No explicit protected paths, secret guards, or deterministic checks preventing modification of `data/customers.json` or generated artifacts. |
+
+TOTAL BEFORE: 39.0 / 100
+
+Top 3 friction points:
+1. **Broken & incomplete operational context (`AGENTS.md` / `REQUERIMENTS.md` / missing `REPO_MAP.md`)**: `AGENTS.md` references a non-existent `REQUIREMENTS.md` (misspelled `REQUERIMENTS.md`), `ARCHITECTURE.md` references a non-existent `search.py`, and the lack of `docs/REPO_MAP.md` forced the agent to read 15 files and run manual directory scans.
+2. **Tracked binary/cache artifacts and missing guardrails (`.coverage`, `__pycache__/*.pyc`)**: Because there is no `.gitignore` or `scripts/check_repo_contract.py`, running `pytest --cov=src` automatically dirtied 3 tracked binary files in `git status`, causing an out-of-scope modification violation.
+3. **No single reproducible verification contract (`scripts/verify_repo.sh` & CI)**: The agent had to infer validation commands from multiple files and skipped static/contract checks and traceability updates (`docs/traceability.md`), resulting in a `PARTIAL` outcome.
