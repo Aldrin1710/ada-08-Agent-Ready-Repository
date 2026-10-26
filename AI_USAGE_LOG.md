@@ -1,81 +1,36 @@
-# Bitácora de Uso de IA (`AI_USAGE_LOG.md` — `ADA-08` Agent-Ready Repository)
+# AI Usage Log
 
-Esta bitácora documenta las decisiones de ingeniería relevantes, lo detectado por el agente frente a lo validado por el estudiante, y las sugerencias aceptadas o rechazadas durante el desarrollo de **ADA-08**.
+## Entry 01 - Auditoría inicial del repositorio
+Stage: Audit BEFORE
+Prompt/goal: Revisar el estado inicial del repositorio heredado de las actividades anteriores para calificar las ocho dimensiones de preparación antes de ejecutar al agente.
+AI contribution: El asistente inspeccionó los archivos y el historial de Git, detectando que AGENTS.md apuntaba a un archivo REQUIREMENTS.md mal escrito en disco como REQUERIMENTS.md, que ARCHITECTURE.md mencionaba un archivo search.py inexistente y que había archivos compilados de Python y de cobertura subidos al repositorio.
+Student decision: Validé cada uno de los hallazgos revisando los archivos del proyecto y asigné la calificación inicial de 39 sobre 100 en la tabla de auditoría, dejando documentados los tres puntos principales de fricción antes de tocar cualquier archivo.
+Impact: Se estableció una línea base honesta y medible sobre el código original mediante el tag ada08-baseline.
 
----
+## Entry 02 - Ejecución BEFORE e identificación de conocimiento implícito
+Stage: BEFORE Execution & Implicit Knowledge
+Prompt/goal: Ejecutar la tarea controlada CR-02 (incluir el apellido en las coincidencias exactas y desempatar por id ascendente) en una sesión limpia usando únicamente el prompt oficial.
+AI contribution: El agente implementó correctamente la lógica en src/service.py y agregó dos pruebas en tests/test_search.py, pero durante el proceso tuvo que explorar quince archivos para ubicarse, falló en su primer intento de edición por los saltos de línea del archivo y al correr pytest ensució tres archivos binarios que estaban rastreados en Git.
+Student decision: Evalué el resultado de la corrida como parcial porque, aunque las pruebas pasaron, el repositorio quedó con archivos fuera de alcance modificados. A partir de esta observación documenté las cinco piezas de conocimiento implícito que el agente tuvo que adivinar.
+Impact: Se obtuvo evidencia clara de qué cosas sabíamos nosotros por haber hecho el proyecto antes pero que no estaban explícitas para un agente nuevo.
 
-## Entrada 1 — Auditoría Inicial de Preparación del Repositorio (`BEFORE`)
-- **Fecha**: 2026-10-26
-- **Contexto**: Auditar el repositorio base (`ada08-baseline`, commit `a0f667c`) en las 8 dimensiones de *Agent-Ready Repository* antes de ejecutar la tarea controlada `CR-02`.
-- **Qué detectó el agente**:
-  - `AGENTS.md` ordenaba leer `REQUIREMENTS.md`, pero el archivo en disco estaba mal escrito como `REQUERIMENTS.md`.
-  - `ARCHITECTURE.md` referenciaba un punto de entrada de CLI inexistente (`python search.py "termino"`) y describía límites de validación/errores que no coincidían con `src/cli.py` ni `src/storage.py`.
-  - `.coverage` y 11 archivos binarios compilados (`src/__pycache__/*.pyc`, `tests/__pycache__/*.pyc`) estaban rastreados en Git sin existir un archivo `.gitignore`.
-  - No existían `docs/REPO_MAP.md`, `scripts/verify_repo.sh`, `scripts/check_repo_contract.py`, `requirements.txt` ni `.github/workflows/verify.yml`.
-- **Qué validó y decidió el humano**:
-  - Se validaron todos los hallazgos contra el árbol real del repositorio y se calificó el estado inicial con **39.0 / 100** en `REPOSITORY_READINESS_AUDIT.md`.
-  - Se definió `TASK_UNDER_TEST.md` (`CR-02`: coincidencia exacta también en `last_name` + desempate determinista por `id` ascendente) y se preservó el tag `ada08-baseline` antes de correr el experimento `BEFORE`.
+## Entry 03 - Rediseño de AGENTS.md y creación del mapa del repositorio
+Stage: Context & Navigation Improvements
+Prompt/goal: Mejorar AGENTS.md como contrato operativo y crear docs/REPO_MAP.md para evitar que el agente explore archivos innecesarios.
+AI contribution: Propuso una estructura para AGENTS.md con orden de lectura, fuentes de verdad, comandos oficiales, reglas de cambio y condiciones de paro, además de un mapa de navegación con una guía específica para cambios en la lógica de búsqueda.
+Student decision: Acepté la estructura propuesta asegurándome de que AGENTS.md y REPO_MAP.md no duplicaran las reglas de negocio que ya viven en REQUIREMENTS.md y SPEC.md. También decidí corregir el nombre de REQUIREMENTS.md y pasar los artefactos técnicos del agente a inglés para cumplir con la convención de la actividad.
+Impact: La navegación del proyecto quedó centralizada y sin referencias rotas.
 
----
+## Entry 04 - Creación del script de verificación y guardrails en código
+Stage: Executable Knowledge & Guardrails
+Prompt/goal: Convertir las reglas más importantes del repositorio en comprobaciones automáticas dentro de scripts/verify_repo.sh y scripts/check_repo_contract.py.
+AI contribution: Desarrolló el script en Python para verificar la existencia de los archivos obligatorios, validar que SPEC.md referencie los identificadores de requisitos, comprobar mediante el árbol sintáctico que las funciones principales tengan anotaciones de tipos y asegurar con Git que no se modifique data/customers.json ni se rastreen archivos compilados.
+Student decision: Aprobé la implementación y pedí que el script de verificación ejecutara pytest sin generar caché ni archivos bytecode para mantener siempre limpio el directorio de trabajo, eliminando además los archivos .pyc que venían arrastrándose de entregas pasadas.
+Impact: Reglas que antes eran simples peticiones de texto en Markdown pasaron a ser validaciones automáticas que fallan si no se cumplen.
 
-## Entrada 2 — Ejecución `BEFORE` y Descubrimiento de Conocimiento Implícito (`Discoverability / Implicit Knowledge`)
-- **Fecha**: 2026-10-26
-- **Contexto**: Ejecución del subagente en sesión limpia (`5b138d3d-6b95-4152-95d8-8db04fb55a83`) sobre la rama `before-experiment` usando exactamente el prompt oficial en inglés de la Sección 9 de ADA-08.
-- **Qué información estaba oculta y cómo afectó al agente**:
-  - El agente tuvo que ejecutar 2 escaneos de directorios (`Get-ChildItem`) y leer 15 archivos (incluyendo módulos irrelevantes como `src/cli.py`, `src/storage.py`, `tests/test_cli.py`, `tests/test_storage.py` y `data/customers.json`) para comprender la estructura y localizar `REQUERIMENTS.md`.
-  - Su primera llamada a `edit_file` sobre `src/service.py` falló por los saltos de línea CRLF y espacios al final de línea, obligándolo a sobrescribir todo el archivo con `write_file`.
-  - Al ejecutar `pytest -v --cov=src tests/`, se modificaron 3 archivos binarios rastreados (`.coverage` y 2 archivos `.pyc`) en `git status`.
-  - El agente omitió actualizar `docs/traceability.md` con las 2 nuevas pruebas unitarias.
-- **Decisión humana (`results/implicit-knowledge.md`)**:
-  - Se calificó la corrida `BEFORE` como **PARTIAL** en `results/before-agent-run.md` y se documentaron 5 hallazgos de conocimiento implícito (`IK-01`..`IK-05`), decidiendo convertir las reglas de estructura, trazabilidad e higiene en verificaciones ejecutables (`check_repo_contract.py` + `.gitignore`) en lugar de depender solo de texto en Markdown.
-
----
-
-## Entrada 3 — Diseño de `AGENTS.md` y Adaptador `GEMINI.md`
-- **Fecha**: 2026-10-26
-- **Contexto**: Diseño de la Mejora `I-01` (`AGENTS.md`) y la Mejora `I-02` (`GEMINI.md`).
-- **Sugerencias aceptadas**:
-  - Se incluyeron las 7 secciones operativas esenciales en `AGENTS.md` (redactado en inglés según la convención 6.1): `Read First`, `Sources of Truth`, `Repository Map`, `Standard Commands`, `Change Rules`, `Stop Conditions` y `Definition of Done`.
-  - Se documentaron explícitamente tanto el comando en Git Bash (`D:\Git\bin\bash.exe scripts/verify_repo.sh` / `./scripts/verify_repo.sh`) como el wrapper equivalente en PowerShell (`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify_repo.ps1`) tras validar que `bash` no estaba en el `PATH` por defecto de Windows.
-- **Sugerencias rechazadas**:
-  - Se rechazó copiar las reglas detalladas de búsqueda (`SR-01`..`SR-03`) o la matriz de trazabilidad dentro de `AGENTS.md` o `GEMINI.md`, evitando crear una segunda fuente de verdad que pudiera contradecir a `REQUIREMENTS.md`, `SPEC.md` o `docs/traceability.md`.
-
----
-
-## Entrada 4 — Guardrail: Qué Regla se Convirtió a Software y Por Qué (`check_repo_contract.py`)
-- **Fecha**: 2026-10-26
-- **Contexto**: Diseño de la Mejora `I-05` (`scripts/check_repo_contract.py`) y la Mejora `I-06` (`.gitignore` / `.gitattributes`).
-- **Por qué convertirla a software en lugar de instrucción natural**:
-  - En `BEFORE`, `AGENTS.md` ya decía en lenguaje natural *"Documentation reflects final behavior"* y *"No unrelated files are changed"*, pero el agente aun así olvidó actualizar `docs/traceability.md` y ensució `.coverage` y `*.pyc`.
-- **Reglas convertidas en chequeos deterministas en `scripts/check_repo_contract.py`**:
-  1. Verificación con expresiones regulares de que toda función `def test_*` en `tests/test_search.py` aparezca registrada en `docs/traceability.md`.
-  2. Chequeo con `git ls-files` que falla si cualquier archivo `.pyc`, `__pycache__`, `.coverage` o `.env` está rastreado en Git.
-  3. Chequeo de ruta protegida con `git diff` que asegura que `data/customers.json` no haya sido modificado.
-  4. Chequeo de análisis sintáctico (AST) que verifica que las funciones públicas en `src/service.py` y `src/storage.py` tengan anotaciones de tipo en sus parámetros y retorno (`NFR-03`).
-
----
-
-## Entrada 5 — CI: Verificaciones Compartidas entre Humano, Agente y Pipeline (`verify_repo.sh` y `.github/workflows/verify.yml`)
-- **Fecha**: 2026-10-26
-- **Contexto**: Diseño de la Mejora `I-04` (`scripts/verify_repo.sh`) y la Mejora `I-07` (`.github/workflows/verify.yml`).
-- **Qué verificaciones se decidió compartir y por qué**:
-  - Se decidió que humano, agente y CI compartan exactamente los mismos 3 pasos a través de `scripts/verify_repo.sh`: (1) `pytest -q --cov=src --cov-fail-under=90 tests/`, (2) `python -m compileall -q src tests scripts` y (3) `python scripts/check_repo_contract.py`.
-  - `.github/workflows/verify.yml` instala `requirements.txt` e invoca directamente `bash ./scripts/verify_repo.sh` sin duplicar lógica dentro del YAML, garantizando un único contrato ejecutable compartido.
-
----
-
-## Entrada 6 — Ejecución `AFTER`: Qué Cambió en el Comportamiento del Agente
-- **Fecha**: 2026-10-26
-- **Contexto**: Restauración del código funcional base (`src/` y `tests/` de `ada08-baseline`), aplicación exclusiva de las mejoras de *Repository Readiness* (`21cc88a`) y ejecución de una nueva sesión limpia de `coding-agent` (`d0a93548-2bce-482a-978f-b5217f33da5c`) con el mismo prompt y `TASK_UNDER_TEST.md`.
-- **Cambios observados en el comportamiento del agente**:
-  - El agente siguió `AGENTS.md` $\rightarrow$ `docs/REPO_MAP.md`, omitió todos los módulos irrelevantes (`cli.py`, `storage.py`, `model.py`, `customers.json`), editó `src/service.py`, `tests/test_search.py` y `docs/traceability.md` en un solo turno con `0` llamadas fallidas, ejecutó `scripts/verify_repo.ps1` (`REPO_CONTRACT: PASS`, `VERIFY_REPO: PASS`) y finalizó en 31 pasos (vs. 39 en BEFORE) con `0` archivos fuera de alcance modificados (**Resultado Final: `PASS`**).
-
----
-
-## Entrada 7 — Evaluación Final: Qué Limitación Sigue Requiriendo Intervención Humana
-- **Fecha**: 2026-10-26
-- **Contexto**: Cierre de `REPOSITORY_READINESS_AUDIT.md` (`AFTER: 98.0 / 100`, `Delta: +59.0`) y `results/readiness-improvement-report.md`.
-- **Límites que siguen requiriendo decisión humana (`Human Gate`)**:
-  - Resolver ambigüedades de negocio (`Q-01` sobre búsqueda difusa, `Q-02` sobre historial de búsquedas) o posibles contradicciones futuras entre `REQUIREMENTS.md` y `SPEC.md`.
-  - Aprobar cambios en los límites de arquitectura (`ARCHITECTURE.md`), la introducción de dependencias externas de ejecución (`C-01`) o cambios al dataset semilla protegido (`data/customers.json`).
-  - Aprobar y hacer merge de Pull Requests en GitHub (restringido explícitamente como *Human Gate* por `.agents/skills/reviewing_pull_requests/SKILL.md`).
+## Entry 05 - Ejecución AFTER y evaluación final
+Stage: AFTER Execution & Impact Analysis
+Prompt/goal: Restaurar el código funcional del baseline, aplicar únicamente las mejoras de preparación del repositorio y volver a ejecutar la tarea CR-02 en una sesión limpia con el mismo prompt.
+AI contribution: En esta segunda sesión el agente leyó primero el contrato y el mapa del repositorio, fue directo a src/service.py y tests/test_search.py sin abrir archivos de otras capas, aplicó los cambios sin errores de edición y ejecutó el script de verificación obteniendo un resultado exitoso.
+Student decision: Revisé que el árbol de trabajo de Git no tuviera archivos ajenos modificados y comparé las métricas de ambas sesiones, actualizando la auditoría final con un puntaje de 98 sobre 100. Reconocí que decisiones como cambiar la arquitectura, modificar los datos semilla de clientes o resolver ambigüedades del negocio siguen requiriendo juicio humano.
+Impact: Se comprobó con evidencia que preparar el repositorio reduce la incertidumbre del agente, evita modificaciones accidentales y mejora la calidad de la entrega.
