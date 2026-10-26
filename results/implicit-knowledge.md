@@ -2,65 +2,65 @@
 
 ## IK-01
 What:
-The requirements source-of-truth file is actually named `REQUERIMENTS.md` (misspelled) instead of `REQUIREMENTS.md` as referenced in `AGENTS.md` and `TASK_UNDER_TEST.md`.
+El archivo fuente de verdad de requisitos se llama en realidad `REQUERIMENTS.md` (con error ortográfico) en lugar de `REQUIREMENTS.md` como lo referencian `AGENTS.md` y `TASK_UNDER_TEST.md`.
 
 How was it discovered:
-By running `Get-ChildItem -Force` on the repository root before attempting to read `REQUIREMENTS.md`.
+Ejecutando `Get-ChildItem -Force` en la raíz del repositorio antes de intentar leer `REQUIREMENTS.md`.
 
 Should this remain implicit?
 NO
 
 Where should it become explicit?
-Rename the file to `REQUIREMENTS.md` and enforce its existence deterministically via `scripts/check_repo_contract.py` and `AGENTS.md`.
+Renombrar el archivo a `REQUIREMENTS.md` y validar su existencia de forma determinista mediante `scripts/check_repo_contract.py` y `AGENTS.md`.
 
 ## IK-02
 What:
-Compiled bytecode files (`src/__pycache__/*.pyc`, `tests/__pycache__/*.pyc`) and `.coverage` are erroneously tracked in Git, so running `pytest --cov=src` pollutes `git status` with out-of-scope binary diffs.
+Los archivos de bytecode compilado (`src/__pycache__/*.pyc`, `tests/__pycache__/*.pyc`) y `.coverage` están rastreados por error en Git, por lo que ejecutar `pytest --cov=src` contamina `git status` con cambios binarios fuera de alcance.
 
 How was it discovered:
-Only after executing `pytest -v --cov=src tests/; git status -s` at the end of the BEFORE run.
+Únicamente después de ejecutar `pytest -v --cov=src tests/; git status -s` al final de la corrida BEFORE.
 
 Risk:
-The agent modifies unrelated binary artifacts on every test run, violating the Definition of Done ("No unrelated files are changed") and creating merge conflicts.
+El agente modifica artefactos binarios no relacionados en cada ejecución de pruebas, violando el Definition of Done (*"No unrelated files are changed"*) y generando conflictos de fusión.
 
 Remediation:
-Untrack `__pycache__/` and `.coverage` from Git, add `.gitignore`, and add a deterministic guardrail in `scripts/check_repo_contract.py` that fails if any `.pyc`, `__pycache__`, or `.coverage` file is tracked or modified.
+Eliminar `__pycache__/` y `.coverage` del índice de Git (`git rm --cached`), agregar `.gitignore`, e incluir un guardrail determinista en `scripts/check_repo_contract.py` que falle si cualquier archivo `.pyc`, `__pycache__` o `.coverage` está rastreado en Git.
 
 ## IK-03
 What:
-The actual CLI entry point is `src/cli.py` (or `search.bat` on Windows), NOT `search.py` as claimed in `ARCHITECTURE.md` (`python search.py "termino"`), and input validations (`VR-01`, `VR-02`) live in `src/cli.py` while JSON schema exit handling (`EH-02`) lives in `src/storage.py`.
+El punto de entrada real de la CLI es `src/cli.py` (o `search.bat` en Windows), NO `search.py` como afirma `ARCHITECTURE.md` (`python search.py "termino"`), y las validaciones de entrada (`VR-01`, `VR-02`) viven en `src/cli.py` mientras que la salida por error de esquema JSON (`EH-02`) vive en `src/storage.py`.
 
 How was it discovered:
-By reading all 4 files under `src/` (`cli.py`, `service.py`, `storage.py`, `model.py`) and comparing them against `ARCHITECTURE.md` and `README.md`.
+Leyendo los 4 archivos dentro de `src/` (`cli.py`, `service.py`, `storage.py`, `model.py`) y comparándolos contra `ARCHITECTURE.md` y `README.md`.
 
 Risk:
-An agent relying on `ARCHITECTURE.md` looks for a non-existent `search.py` file or places validation/search logic in the wrong module.
+Un agente que confíe en `ARCHITECTURE.md` buscará un archivo `search.py` inexistente o colocará la lógica de validación/búsqueda en el módulo equivocado.
 
 Remediation:
-Update `ARCHITECTURE.md` to reflect real module boundaries and create `docs/REPO_MAP.md` with accurate entry points, layer responsibilities, and a step-by-step Change Guide.
+Actualizar `ARCHITECTURE.md` para reflejar los límites reales de cada módulo y crear `docs/REPO_MAP.md` con los puntos de entrada exactos, responsabilidades por capa y una Guía de Cambios paso a paso.
 
 ## IK-04
 What:
-Running coverage and verifying `NFR-03` (minimum 90% coverage + static type/quality verification) requires specific commands (`pytest --cov=src --cov-fail-under=90` and contract/syntax checks) that are absent from `AGENTS.md`.
+Ejecutar la medición de cobertura y verificar `NFR-03` (mínimo 90% de cobertura + verificación estática de tipos/sintaxis) requiere comandos específicos (`pytest --cov=src --cov-fail-under=90` y chequeos de contrato/compilación) que no aparecen en `AGENTS.md`.
 
 How was it discovered:
-By cross-referencing `README.md` (`pytest --cov=src tests/`), `REQUERIMENTS.md` (`NFR-03`), and `pytest.ini`.
+Cruzando manualmente la información de `README.md` (`pytest --cov=src tests/`), `REQUERIMENTS.md` (`NFR-03`) y `pytest.ini`.
 
 Should this remain implicit?
 NO
 
 Where should it become explicit?
-`AGENTS.md` (Standard Commands section), `scripts/verify_repo.sh`, and `.github/workflows/verify.yml`.
+En `AGENTS.md` (sección `Standard Commands`), `scripts/verify_repo.sh` (y `scripts/verify_repo.ps1`), y `.github/workflows/verify.yml`.
 
 ## IK-05
 What:
-`data/customers.json` is the production/seed dataset used by CLI integration tests (`test_cli_valid_term` in `tests/test_cli.py`), and must not be modified when adding unit tests (unit tests in `tests/test_search.py` must mock `src.service.load_customers`).
+`data/customers.json` es el dataset semilla utilizado por las pruebas de integración de la CLI (`test_cli_valid_term` en `tests/test_cli.py`), y no debe modificarse al agregar pruebas unitarias (las pruebas unitarias en `tests/test_search.py` deben usar mocks sobre `src.service.load_customers`).
 
 How was it discovered:
-By inspecting `tests/test_search.py`, `tests/test_cli.py`, and `data/customers.json`.
+Inspeccionando `tests/test_search.py`, `tests/test_cli.py` y `data/customers.json`.
 
 Risk:
-An agent might edit `data/customers.json` to test edge cases, breaking existing CLI integration tests or corrupting seed data.
+Un agente podría editar `data/customers.json` para probar casos borde, rompiendo las pruebas existentes de la CLI o alterando los datos semilla.
 
 Remediation:
-Document `data/customers.json` under `Do Not Edit Directly` in `docs/REPO_MAP.md` and `AGENTS.md`, and enforce a deterministic checksum/clean-diff check on `data/customers.json` inside `scripts/check_repo_contract.py`.
+Documentar `data/customers.json` bajo `Do Not Edit Directly` en `docs/REPO_MAP.md` y `AGENTS.md`, e implementar una verificación determinista con `git diff` sobre `data/customers.json` dentro de `scripts/check_repo_contract.py`.
